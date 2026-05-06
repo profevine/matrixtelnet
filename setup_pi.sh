@@ -4,7 +4,7 @@
 # Run this script from the directory containing the matrix_telnet folder
 
 SERVICE_NAME="matrix-telnet"
-PROJECT_DIR="$(pwd)/matrix_telnet"
+PROJECT_DIR="$(pwd)"
 PYTHON_PATH="$(which python3)"
 PORT=2772
 
