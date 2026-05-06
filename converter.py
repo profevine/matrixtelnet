@@ -3,9 +3,9 @@ import numpy as np
 import sys
 import os
 
-# Refined ASCII map for better gradients (light to dark for black background)
-# Using more characters for smoother transitions
-ASCII_CHARS = " .':,;+*#%S$X@ "
+# ASCII characters by density (for dark backgrounds)
+# Lightest (white) is at the end, Darkest (black) is at the beginning
+ASCII_CHARS = " .:-=+*#%@"
 
 def frame_to_ascii(frame, width=80):
     # 1. Resize while maintaining aspect ratio
@@ -17,19 +17,17 @@ def frame_to_ascii(frame, width=80):
     # 2. Grayscale
     gray = cv2.cvtColor(resized_frame, cv2.COLOR_BGR2GRAY)
     
-    # 3. Enhance Contrast (CLAHE - Contrast Limited Adaptive Histogram Equalization)
-    # This is much better than simple equalization for movies with dark and light areas
-    clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8,8))
-    enhanced = clahe.apply(gray)
+    # 3. Aggressive Contrast Enhancement
+    # Normalize to use full 0-255 range
+    min_val, max_val, _, _ = cv2.minMaxLoc(gray)
+    if max_val > min_val:
+        gray = cv2.convertScaleAbs(gray, alpha=255.0/(max_val - min_val), beta=-min_val * 255.0/(max_val - min_val))
     
-    # 4. Brightness Boost (Optional: shift values up slightly)
-    # alpha=1.2 (contrast boost), beta=20 (brightness boost)
-    enhanced = cv2.convertScaleAbs(enhanced, alpha=1.1, beta=10)
-    
-    # 5. Map pixels to characters
-    # Map 0-255 to 0-(len-1)
-    pixels = enhanced.flatten()
+    # 4. Map pixels to characters
+    pixels = gray.flatten()
     num_chars = len(ASCII_CHARS)
+    
+    # Scale pixel values (0-255) to character indices (0 to num_chars-1)
     chars = [ASCII_CHARS[int(p * (num_chars - 1) / 255)] for p in pixels]
     
     ascii_str = "".join(chars)
@@ -43,7 +41,7 @@ def convert_video(input_path, output_path, width=80, max_frames=None):
         return
 
     frames_count = 0
-    print(f"Starting conversion of {input_path}...")
+    print(f"Starting conversion of {input_path} with optimized contrast...")
     
     with open(output_path, 'w') as f:
         while True:
