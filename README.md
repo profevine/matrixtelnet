@@ -1,82 +1,99 @@
 # Matrix ASCII Telnet Server 🕶️
 
-Inspired by the famous `towel.blinkenlights.nl`, this project brings the Matrix experience to your terminal. It serves an ASCII version of the movie story, followed by high-FPS converted video sequences, and finally the iconic infinite "Digital Rain" effect—all over a TCP connection (Telnet).
-
-## ✨ Features
-
-- **Story Mode:** Displays key scenes from "The Matrix" in stylized ASCII art (slow-paced).
-- **Video Playback:** Support for 24 FPS ASCII video sequences.
-- **Infinite Matrix Rain:** The classic falling green code effect.
-- **Video-to-ASCII Converter:** A built-in tool to transform any `.mp4` into terminal art.
-- **Telnet/TCP Server:** Lightweight server using Python's `asyncio`.
-- **Raspberry Pi Ready:** Includes a setup script to run as a persistent systemd service.
-
-## 🚀 Quick Start (Local)
-
-1. **Install Dependencies:**
-   ```bash
-   pip install opencv-python-headless numpy
-   ```
-
-2. **Run the Server:**
-   ```bash
-   python3 server.py
-   ```
-
-3. **Connect:**
-   In another terminal, run:
-   ```bash
-   telnet localhost 2772
-   # OR
-   nc localhost 2772
-   ```
-
-## 🍓 Raspberry Pi Deployment
-
-To make your Pi a permanent Matrix host:
-
-1. **Clone & Setup:**
-   ```bash
-   cd matrix_telnet
-   chmod +x setup_pi.sh
-   ./setup_pi.sh
-   ```
-2. **Watch from any device:**
-   ```bash
-   telnet <your-pi-ip> 2772
-   ```
-
-## 🎥 Converting Your Own Videos
-
-You can add any movie scene to the server:
-
-1. **Prepare your video:** Place an `.mp4` file in the project folder.
-2. **Convert:**
-   ```bash
-   python3 converter.py my_scene.mp4 frames/movie_sequence.txt
-   ```
-3. **Restart the Server:**
-   The server automatically detects `frames/movie_sequence.txt` and plays it at high speed.
-   ```bash
-   sudo systemctl restart matrix-telnet
-   ```
-
-## 🛠️ Project Structure
-
-- `server.py`: The heart of the TCP server and sequence controller.
-- `matrix_rain.py`: The engine for the digital rain effect.
-- `converter.py`: OpenCV script for video-to-ASCII conversion.
-- `frames/`:
-    - `story.txt`: Static scenes with `=====` delimiters.
-    - `movie_sequence.txt`: High-speed frames generated from video.
-- `setup_pi.sh`: Automation for systemd service creation.
-
-## 🧼 Terminal Cleanup
-
-If your terminal gets messy or the cursor disappears after a connection, simply run:
-```bash
-reset
-```
+[Português](#português) | [English](#english)
 
 ---
+
+## Português
+
+Inspirado no famoso `towel.blinkenlights.nl`, este projeto traz a experiência de "The Matrix" para o seu terminal. Ele transmite uma versão ASCII da história do filme, seguida por sequências de vídeo em alta velocidade (24 FPS) e termina com o icônico efeito de "Chuva Digital" — tudo através de uma conexão TCP (Telnet).
+
+### ✨ Funcionalidades
+- **Modo História:** Cenas clássicas em ASCII art estilizado.
+- **Reprodução de Vídeo:** Suporte para sequências de vídeo em 24 FPS com cores reais (TrueColor).
+- **Chuva Digital Infinita:** O efeito clássico de código caindo.
+- **Controles Interativos:** Play, Pause e saltos no tempo via teclado.
+- **Conversor Integrado:** Ferramenta para transformar qualquer `.mp4` em arte ASCII colorida.
+
+### 📺 Como Assistir
+
+#### No Windows (PowerShell ou CMD)
+1. O Windows não vem com o cliente Telnet ativo por padrão. Para ativar:
+   - Abra o PowerShell como Administrador e rode: `Enable-WindowsOptionalFeature -Online -FeatureName TelnetClient`
+2. Após ativar, abra um terminal e digite:
+   ```bash
+   telnet matrix.profevine.com.br 2772
+   ```
+
+#### No Linux / macOS
+1. Abra o seu terminal favorito.
+2. Certifique-se de que o `telnet` está instalado (`sudo apt install telnet` no Ubuntu).
+3. Conecte-se:
+   ```bash
+   telnet matrix.profevine.com.br 2772
+   ```
+
+### 🎮 Controles de Reprodução
+- **[Espaço]**: Play / Pause
+- **[L]**: Avançar 10 segundos
+- **[H]**: Recuar 10 segundos
+- **[J]**: Avançar 1 minuto
+- **[K]**: Recuar 1 minuto
+- **[Q]**: Sair
+
+---
+
+## English
+
+Inspired by `towel.blinkenlights.nl`, this project streams "The Matrix" experience to your terminal. It features an ASCII story mode, high-speed video sequences (24 FPS) with TrueColor support, and the iconic infinite "Digital Rain" effect over a Telnet connection.
+
+### ✨ Features
+- **Story Mode:** Classic scenes in stylized ASCII art.
+- **Video Playback:** High-fidelity 24 FPS video sequences with original colors.
+- **Infinite Matrix Rain:** The classic falling code effect.
+- **Interactive Controls:** Play, Pause, and Seeking via keyboard.
+- **Video-to-ASCII Converter:** Transform any `.mp4` into vibrant ASCII art.
+
+### 📺 How to Watch
+
+#### On Windows (PowerShell or CMD)
+1. The Telnet client is disabled by default. To enable it:
+   - Open PowerShell as Administrator and run: `Enable-WindowsOptionalFeature -Online -FeatureName TelnetClient`
+2. Once enabled, open a terminal and type:
+   ```bash
+   telnet matrix.profevine.com.br 2772
+   ```
+
+#### On Linux / macOS
+1. Open your favorite terminal.
+2. Ensure `telnet` is installed (`sudo apt install telnet` on Debian/Ubuntu).
+3. Connect:
+   ```bash
+   telnet matrix.profevine.com.br 2772
+   ```
+
+### 🎮 Playback Controls
+- **[Space]**: Play / Pause
+- **[L]**: Fast-forward 10 seconds
+- **[H]**: Rewind 10 seconds
+- **[J]**: Fast-forward 1 minute
+- **[K]**: Rewind 1 minute
+- **[Q]**: Quit
+
+---
+
+## 🛠️ Setup & Deployment (Admin Only)
+
+### Local Conversion
+To convert a new video:
+```bash
+python3 converter.py input.mp4 frames/movie_sequence.txt 80
+```
+
+### Raspberry Pi Service
+```bash
+chmod +x setup_pi.sh
+./setup_pi.sh
+```
+
 *Welcome to the desert of the real.*
