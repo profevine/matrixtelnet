@@ -62,14 +62,14 @@ class MatrixTelnetServer:
             
             if movie_exists:
                 for frame in movie_streamer.frames():
-                    writer.write((CLEAR + BRIGHT_GREEN + frame + RESET).encode())
+                    writer.write((CLEAR + frame).encode())
                     await writer.drain()
                     await asyncio.sleep(0.04) # ~24 FPS
             else:
                 # If no movie, play the shorter story
                 story_streamer = FrameStreamer("frames/story.txt")
                 for frame in story_streamer.frames():
-                    writer.write((CLEAR + BRIGHT_GREEN + frame + RESET).encode())
+                    writer.write((CLEAR + frame).encode())
                     await writer.drain()
                     await asyncio.sleep(3)
             
