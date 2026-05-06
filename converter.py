@@ -3,8 +3,9 @@ import numpy as np
 import sys
 import os
 
-# ASCII characters from dark to light
-ASCII_CHARS = "@%#*+=-:. "
+# ASCII characters from light to dark (optimized for dark terminals)
+# Space for black, dense characters for white
+ASCII_CHARS = " .:-=+*#%@"
 
 def frame_to_ascii(frame, width=80):
     height, original_width = frame.shape[:2]
@@ -14,7 +15,11 @@ def frame_to_ascii(frame, width=80):
     resized_frame = cv2.resize(frame, (width, new_height))
     gray_frame = cv2.cvtColor(resized_frame, cv2.COLOR_BGR2GRAY)
     
+    # Improve contrast using Histogram Equalization
+    gray_frame = cv2.equalizeHist(gray_frame)
+    
     pixels = gray_frame.flatten()
+    # Map pixels to characters: 0 (black) -> " ", 255 (white) -> "@"
     chars = [ASCII_CHARS[pixel * (len(ASCII_CHARS) - 1) // 255] for pixel in pixels]
     
     ascii_str = "".join(chars)
