@@ -7,13 +7,11 @@ import pickle
 from matrix_rain import MatrixRain, GREEN, BRIGHT_GREEN, RESET, CLEAR, HIDE_CURSOR, SHOW_CURSOR
 
 # Telnet Protocol Constants
-IAC  = b'\xff' # Interpret As Command
+IAC  = b'\xff'
 WILL = b'\xfb'
-WONT = b'\xfc'
 DO   = b'\xfd'
-DONT = b'\xfe'
 ECHO = b'\x01'
-SGA  = b'\x03' # Suppress Go Ahead
+SGA  = b'\x03'
 
 YELLOW = "\033[93m"
 BLUE = "\033[94m"
@@ -79,7 +77,8 @@ class IndexedFrameStreamer:
             for line in f:
                 if line.startswith('====='): break
                 current_frame.append(line)
-            return "".join(current_frame).strip()
+            # CRITICAL: Replace \n with \r\n for Telnet compliance
+            return "".join(current_frame).strip().replace('\n', '\r\n')
 
     def __len__(self):
         return len(self.offsets)
@@ -102,18 +101,16 @@ class MatrixTelnetServer:
     async def handle_client(self, reader, writer):
         addr = writer.get_extra_info('peername')
         try:
-            # TELNET NEGOTIATION: Request Character Mode
-            # We tell the client: "I will echo, I will suppress go-ahead, you should suppress go-ahead"
-            writer.write(IAC + WILL + ECHO)
-            writer.write(IAC + WILL + SGA)
-            writer.write(IAC + DO + SGA)
+            writer.write(IAC + WILL + ECHO + IAC + WILL + SGA + IAC + DO + SGA)
             await writer.drain()
 
-            writer.write(HIDE_CURSOR.encode() + CLEAR.encode() + WELCOME.encode())
+            # Ensure welcome and all \n are \r\n
+            clean_welcome = WELCOME.replace('\n', '\r\n')
+            writer.write(HIDE_CURSOR.encode() + CLEAR.encode() + clean_welcome.encode())
             await writer.drain()
             
             while not self.movie.is_ready:
-                writer.write(b"\rBuilding Index... Please wait.\r")
+                writer.write(b"\rBuilding Index... Please wait.\r\n")
                 await writer.drain()
                 await asyncio.sleep(2)
             
@@ -126,12 +123,9 @@ class MatrixTelnetServer:
                 while True:
                     data = await reader.read(1)
                     if not data: break
-                    # Ignore telnet commands (starting with \xff)
                     if data[0] == 255:
-                        # Skip next 2 bytes of telnet command
                         await reader.read(2)
                         continue
-                        
                     key = data.decode().lower()
                     if key == ' ': playing = not playing
                     elif key == 'l': frame_idx = min(frame_idx + 240, total_frames - 1)
@@ -147,7 +141,9 @@ class MatrixTelnetServer:
                     frame = self.movie.get_frame(frame_idx)
                     if frame:
                         progress = self.get_progress_bar(frame_idx, total_frames)
-                        writer.write((CLEAR + frame + "\n\n" + progress).encode())
+                        # Use \r\n for line separation
+                        output = CLEAR + frame + "\r\n\r\n" + progress
+                        writer.write(output.encode())
                         await writer.drain()
                         frame_idx += 1
                     await asyncio.sleep(0.04)
@@ -161,7 +157,9 @@ class MatrixTelnetServer:
             rain = MatrixRain(80, 24)
             while True:
                 rain.update()
-                writer.write(rain.get_frame().encode())
+                # Ensure rain uses CRLF
+                frame = rain.get_frame().replace('\n', '\r\n')
+                writer.write(frame.encode())
                 await writer.drain()
                 await asyncio.sleep(0.05)
                 
