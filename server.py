@@ -5,7 +5,6 @@ import shutil
 import os
 from matrix_rain import MatrixRain, GREEN, BRIGHT_GREEN, RESET, CLEAR, HIDE_CURSOR, SHOW_CURSOR
 
-# Welcome message
 WELCOME = fr"""{BRIGHT_GREEN}
 WELCOME TO THE DESERT OF THE REAL.
 
@@ -21,10 +20,17 @@ Connecting to the Matrix...
 class MoviePlayer:
     def __init__(self, file_path):
         self.frames = []
-        if os.path.exists(file_path):
-            with open(file_path, 'r') as f:
+        # Use absolute path based on script location to avoid issues
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        full_path = os.path.join(base_dir, "frames", "story.txt")
+        
+        if os.path.exists(full_path):
+            with open(full_path, 'r') as f:
                 content = f.read()
-                self.frames = content.split('=====')[1:] # Skip first empty split if any
+                # Split by ===== and filter out empty frames
+                self.frames = [f.strip() for f in content.split('=====') if f.strip()]
+        else:
+            print(f"Warning: Frame file not found at {full_path}")
 
     def get_frame(self, frame_index):
         if not self.frames:
@@ -43,35 +49,31 @@ class MatrixTelnetServer:
         print(f"New connection from {addr}")
         
         try:
-            # Send hide cursor command
             writer.write(HIDE_CURSOR.encode())
             writer.write(CLEAR.encode())
-            
-            # Send welcome
             writer.write(WELCOME.encode())
             await writer.drain()
             await asyncio.sleep(3)
             
-            # Story Mode
-            if self.movie.frames:
-                for i in range(len(self.movie.frames)):
-                    frame = self.movie.get_frame(i)
-                    writer.write(frame.encode())
-                    await writer.drain()
-                    await asyncio.sleep(2) # 2 seconds per scene
-            
-            # Infinite Rain Mode
-            width, height = 80, 24
-            rain = MatrixRain(width, height)
+            rain = MatrixRain(80, 24)
+            scene_index = 0
             
             while True:
-                rain.update()
-                frame = rain.get_frame()
+                # 1. Play a scene from the movie
+                if self.movie.frames:
+                    frame = self.movie.get_frame(scene_index)
+                    writer.write(frame.encode())
+                    await writer.drain()
+                    await asyncio.sleep(4) # Show scene for 4 seconds
+                    scene_index += 1
                 
-                writer.write(frame.encode())
-                await writer.drain()
-                
-                await asyncio.sleep(0.05)
+                # 2. Play Matrix Rain for a bit
+                start_rain = time.time()
+                while time.time() - start_rain < 10: # 10 seconds of rain
+                    rain.update()
+                    writer.write(rain.get_frame().encode())
+                    await writer.drain()
+                    await asyncio.sleep(0.05)
                 
         except (ConnectionResetError, BrokenPipeError):
             print(f"Connection closed by {addr}")
@@ -79,7 +81,7 @@ class MatrixTelnetServer:
             print(f"Error handling {addr}: {e}")
         finally:
             try:
-                writer.write(SHOW_CURSOR.encode())
+                writer.write(RESET.encode() + SHOW_CURSOR.encode())
                 writer.close()
                 await writer.wait_closed()
             except:
@@ -87,15 +89,10 @@ class MatrixTelnetServer:
 
     async def start(self):
         server = await asyncio.start_server(self.handle_client, self.host, self.port)
-        addr = server.sockets[0].getsockname()
-        print(f'Serving on {addr}')
-
+        print(f'Serving on port {self.port}')
         async with server:
             await server.serve_forever()
 
 if __name__ == "__main__":
     server = MatrixTelnetServer()
-    try:
-        asyncio.run(server.start())
-    except KeyboardInterrupt:
-        print("\nServer shutting down.")
+    asyncio.run(server.start())
