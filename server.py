@@ -36,7 +36,7 @@ class MatrixTelnetServer:
     def __init__(self, host='0.0.0.0', port=2772):
         self.host = host
         self.port = port
-        self.movie = MoviePlayer('matrix_telnet/frames/story.txt')
+        self.movie = MoviePlayer('frames/story.txt')
 
     async def handle_client(self, reader, writer):
         addr = writer.get_extra_info('peername')
