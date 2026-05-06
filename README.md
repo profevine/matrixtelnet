@@ -6,26 +6,26 @@
 
 ## Português
 
-Inspirado no famoso `towel.blinkenlights.nl`, este projeto traz a experiência de "The Matrix" para o seu terminal. Ele transmite uma versão ASCII da história do filme, seguida por sequências de vídeo em alta velocidade (24 FPS) e termina com o icônico efeito de "Chuva Digital" — tudo através de uma conexão TCP (Telnet).
-
-### ✨ Funcionalidades
-- **Modo História:** Cenas clássicas em ASCII art estilizado.
-- **Reprodução de Vídeo:** Suporte para sequências de vídeo em 24 FPS com cores reais (TrueColor).
-- **Chuva Digital Infinita:** O efeito clássico de código caindo.
-- **Controles Interativos:** Play, Pause e saltos no tempo via teclado.
-- **Conversor Integrado:** Ferramenta para transformar qualquer `.mp4` em arte ASCII colorida.
+Inspirado no famoso `towel.blinkenlights.nl`, este projeto traz a experiência de "The Matrix" para o seu terminal. Transmitimos o filme em alta velocidade (24 FPS) com cores reais (TrueColor) e o icônico efeito de "Chuva Digital" — tudo através de uma conexão Telnet.
 
 ### 📺 Como Assistir
 
-#### No Windows (PowerShell ou CMD)
-1. O Windows não vem com o cliente Telnet ativo por padrão. Para ativar:
-   - Abra o PowerShell como Administrador e rode: `Enable-WindowsOptionalFeature -Online -FeatureName TelnetClient`
-2. Após ativar, abra um terminal e digite:
+#### 1. Pelo Navegador (Sem instalar nada)
+Você pode assistir diretamente do seu navegador usando um cliente Telnet online:
+1. Acesse [Telehack.com](https://telehack.com).
+2. No prompt, digite: `tnet matrix.profevine.com.br 2772`
+3. Aperte Enter e aproveite!
+
+#### 2. No Windows (PowerShell ou CMD)
+O Windows não vem com o cliente Telnet ativo por padrão. Para ativar e assistir:
+1. Abra o **PowerShell como Administrador** e rode: 
+   `Enable-WindowsOptionalFeature -Online -FeatureName TelnetClient`
+2. Após ativar, abra qualquer terminal e digite:
    ```bash
    telnet matrix.profevine.com.br 2772
    ```
 
-#### No Linux / macOS
+#### 3. No Linux / macOS
 1. Abra o seu terminal favorito.
 2. Certifique-se de que o `telnet` está instalado (`sudo apt install telnet` no Ubuntu).
 3. Conecte-se:
@@ -34,6 +34,7 @@ Inspirado no famoso `towel.blinkenlights.nl`, este projeto traz a experiência d
    ```
 
 ### 🎮 Controles de Reprodução
+Comande a Matrix usando o seu teclado em tempo real:
 - **[Espaço]**: Play / Pause
 - **[L]**: Avançar 10 segundos
 - **[H]**: Recuar 10 segundos
@@ -45,26 +46,26 @@ Inspirado no famoso `towel.blinkenlights.nl`, este projeto traz a experiência d
 
 ## English
 
-Inspired by `towel.blinkenlights.nl`, this project streams "The Matrix" experience to your terminal. It features an ASCII story mode, high-speed video sequences (24 FPS) with TrueColor support, and the iconic infinite "Digital Rain" effect over a Telnet connection.
-
-### ✨ Features
-- **Story Mode:** Classic scenes in stylized ASCII art.
-- **Video Playback:** High-fidelity 24 FPS video sequences with original colors.
-- **Infinite Matrix Rain:** The classic falling code effect.
-- **Interactive Controls:** Play, Pause, and Seeking via keyboard.
-- **Video-to-ASCII Converter:** Transform any `.mp4` into vibrant ASCII art.
+Inspired by `towel.blinkenlights.nl`, this project streams "The Matrix" experience to your terminal. It features the movie in high-speed (24 FPS) with TrueColor support and the iconic "Digital Rain" effect over a Telnet connection.
 
 ### 📺 How to Watch
 
-#### On Windows (PowerShell or CMD)
-1. The Telnet client is disabled by default. To enable it:
-   - Open PowerShell as Administrator and run: `Enable-WindowsOptionalFeature -Online -FeatureName TelnetClient`
+#### 1. Via Browser (Zero installation)
+You can watch directly from your web browser using an online Telnet client:
+1. Go to [Telehack.com](https://telehack.com).
+2. At the prompt, type: `tnet matrix.profevine.com.br 2772`
+3. Press Enter and enjoy!
+
+#### 2. On Windows (PowerShell or CMD)
+The Telnet client is disabled by default. To enable and watch:
+1. Open **PowerShell as Administrator** and run:
+   `Enable-WindowsOptionalFeature -Online -FeatureName TelnetClient`
 2. Once enabled, open a terminal and type:
    ```bash
    telnet matrix.profevine.com.br 2772
    ```
 
-#### On Linux / macOS
+#### 3. On Linux / macOS
 1. Open your favorite terminal.
 2. Ensure `telnet` is installed (`sudo apt install telnet` on Debian/Ubuntu).
 3. Connect:
@@ -73,6 +74,7 @@ Inspired by `towel.blinkenlights.nl`, this project streams "The Matrix" experien
    ```
 
 ### 🎮 Playback Controls
+Control the Matrix using your keyboard in real-time:
 - **[Space]**: Play / Pause
 - **[L]**: Fast-forward 10 seconds
 - **[H]**: Rewind 10 seconds
@@ -81,19 +83,4 @@ Inspired by `towel.blinkenlights.nl`, this project streams "The Matrix" experien
 - **[Q]**: Quit
 
 ---
-
-## 🛠️ Setup & Deployment (Admin Only)
-
-### Local Conversion
-To convert a new video:
-```bash
-python3 converter.py input.mp4 frames/movie_sequence.txt 80
-```
-
-### Raspberry Pi Service
-```bash
-chmod +x setup_pi.sh
-./setup_pi.sh
-```
-
 *Welcome to the desert of the real.*
