@@ -20,9 +20,8 @@ Connecting to the Matrix...
 class FrameStreamer:
     """Streams frames from a file without loading it entirely into memory."""
     def __init__(self, file_path):
-        self.file_path = file_path
-        self.base_dir = os.path.dirname(os.path.abspath(__file__))
-        self.full_path = os.path.join(self.base_dir, file_path)
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        self.full_path = os.path.join(base_dir, file_path)
 
     def frames(self):
         if not os.path.exists(self.full_path):
@@ -54,23 +53,27 @@ class MatrixTelnetServer:
             writer.write(CLEAR.encode())
             writer.write(WELCOME.encode())
             await writer.drain()
-            await asyncio.sleep(3)
+            await asyncio.sleep(2)
             
-            # 1. Play "story.txt" (Classic Slow Scenes)
-            story_streamer = FrameStreamer("frames/story.txt")
-            for frame in story_streamer.frames():
-                writer.write((CLEAR + BRIGHT_GREEN + frame + RESET).encode())
-                await writer.drain()
-                await asyncio.sleep(3)
-            
-            # 2. Play "movie_sequence.txt" (High FPS Streaming)
+            # 1. Play the Main Movie Sequence (High FPS)
+            # If movie_sequence.txt exists, we play it.
             movie_streamer = FrameStreamer("frames/movie_sequence.txt")
-            for frame in movie_streamer.frames():
-                writer.write((CLEAR + BRIGHT_GREEN + frame + RESET).encode())
-                await writer.drain()
-                await asyncio.sleep(0.04) # ~24 FPS
+            movie_exists = os.path.exists(movie_streamer.full_path)
             
-            # 3. Infinite Matrix Rain
+            if movie_exists:
+                for frame in movie_streamer.frames():
+                    writer.write((CLEAR + BRIGHT_GREEN + frame + RESET).encode())
+                    await writer.drain()
+                    await asyncio.sleep(0.04) # ~24 FPS
+            else:
+                # If no movie, play the shorter story
+                story_streamer = FrameStreamer("frames/story.txt")
+                for frame in story_streamer.frames():
+                    writer.write((CLEAR + BRIGHT_GREEN + frame + RESET).encode())
+                    await writer.drain()
+                    await asyncio.sleep(3)
+            
+            # 2. Infinite Matrix Rain
             rain = MatrixRain(80, 24)
             while True:
                 rain.update()
