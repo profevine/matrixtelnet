@@ -18,25 +18,28 @@ Connecting to the Matrix...
 {RESET}"""
 
 class MoviePlayer:
-    def __init__(self, file_path):
-        self.frames = []
+    def __init__(self, folder_path):
+        self.sequences = {}
         base_dir = os.path.dirname(os.path.abspath(__file__))
-        full_path = os.path.join(base_dir, "frames", "story.txt")
-        if os.path.exists(full_path):
-            with open(full_path, 'r') as f:
-                content = f.read()
-                self.frames = [f.strip() for f in content.split('=====') if f.strip()]
+        frames_dir = os.path.join(base_dir, "frames")
+        
+        if os.path.exists(frames_dir):
+            for filename in os.listdir(frames_dir):
+                if filename.endswith(".txt"):
+                    path = os.path.join(frames_dir, filename)
+                    with open(path, 'r') as f:
+                        content = f.read()
+                        frames = [fr.strip() for fr in content.split('=====') if fr.strip()]
+                        self.sequences[filename] = frames
 
-    def get_frame(self, frame_index):
-        if not self.frames: return ""
-        frame = self.frames[frame_index]
-        return CLEAR + BRIGHT_GREEN + frame + RESET
+    def get_sequence(self, name):
+        return self.sequences.get(name, [])
 
 class MatrixTelnetServer:
     def __init__(self, host='0.0.0.0', port=2772):
         self.host = host
         self.port = port
-        self.movie = MoviePlayer('frames/story.txt')
+        self.movie = MoviePlayer('frames')
 
     async def handle_client(self, reader, writer):
         addr = writer.get_extra_info('peername')
@@ -49,15 +52,21 @@ class MatrixTelnetServer:
             await writer.drain()
             await asyncio.sleep(3)
             
-            # 1. MODO HISTÓRIA (Passa uma vez)
-            if self.movie.frames:
-                for i in range(len(self.movie.frames)):
-                    frame = self.movie.get_frame(i)
-                    writer.write(frame.encode())
-                    await writer.drain()
-                    await asyncio.sleep(3) # Cada cena fica 3 segundos
+            # 1. Play "story.txt" (Classic Slow Scenes)
+            story = self.movie.get_sequence("story.txt")
+            for frame in story:
+                writer.write((CLEAR + BRIGHT_GREEN + frame + RESET).encode())
+                await writer.drain()
+                await asyncio.sleep(3)
             
-            # 2. MODO CHUVA INFINITA (Loop eterno após o filme)
+            # 2. Play "movie_sequence.txt" (High FPS converted video)
+            video = self.movie.get_sequence("movie_sequence.txt")
+            for frame in video:
+                writer.write((CLEAR + BRIGHT_GREEN + frame + RESET).encode())
+                await writer.drain()
+                await asyncio.sleep(0.04) # ~24 FPS
+            
+            # 3. Infinite Matrix Rain
             rain = MatrixRain(80, 24)
             while True:
                 rain.update()
