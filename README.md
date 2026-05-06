@@ -1,35 +1,82 @@
-# Matrix Telnet Server
+# Matrix ASCII Telnet Server 🕶️
 
-Inspired by `towel.blinkenlights.nl`, this server plays a Matrix-themed experience in ASCII art.
+Inspired by the famous `towel.blinkenlights.nl`, this project brings the Matrix experience to your terminal. It serves an ASCII version of the movie story, followed by high-FPS converted video sequences, and finally the iconic infinite "Digital Rain" effect—all over a TCP connection (Telnet).
 
-## Features
-- **Story Mode:** Iconic scenes from the movie in ASCII.
-- **Matrix Rain:** The classic digital rain effect.
-- **TCP Server:** Listen on port 2772 for incoming connections.
+## ✨ Features
 
-## How to run locally
-1. Ensure you have Python 3 installed.
-2. Run the server:
+- **Story Mode:** Displays key scenes from "The Matrix" in stylized ASCII art (slow-paced).
+- **Video Playback:** Support for 24 FPS ASCII video sequences.
+- **Infinite Matrix Rain:** The classic falling green code effect.
+- **Video-to-ASCII Converter:** A built-in tool to transform any `.mp4` into terminal art.
+- **Telnet/TCP Server:** Lightweight server using Python's `asyncio`.
+- **Raspberry Pi Ready:** Includes a setup script to run as a persistent systemd service.
+
+## 🚀 Quick Start (Local)
+
+1. **Install Dependencies:**
    ```bash
-   python3 matrix_telnet/server.py
+   pip install opencv-python-headless numpy
    ```
-3. Connect from another terminal:
+
+2. **Run the Server:**
+   ```bash
+   python3 server.py
+   ```
+
+3. **Connect:**
+   In another terminal, run:
    ```bash
    telnet localhost 2772
-   # or
+   # OR
    nc localhost 2772
    ```
 
-## Deploying to Raspberry Pi
-To run this permanently on your Raspberry Pi:
+## 🍓 Raspberry Pi Deployment
 
-1. Copy the `matrix_telnet` folder to your Pi.
-2. Run the setup script:
+To make your Pi a permanent Matrix host:
+
+1. **Clone & Setup:**
    ```bash
-   bash setup_pi.sh
+   cd matrix_telnet
+   chmod +x setup_pi.sh
+   ./setup_pi.sh
    ```
-   This will create a systemd service named `matrix-telnet.service` that starts automatically on boot.
+2. **Watch from any device:**
+   ```bash
+   telnet <your-pi-ip> 2772
+   ```
 
-## Adding More Movie Frames
-You can add more frames to `matrix_telnet/frames/story.txt`. Use `=====` as a delimiter between frames.
-The server will play them in sequence before starting the Matrix Rain.
+## 🎥 Converting Your Own Videos
+
+You can add any movie scene to the server:
+
+1. **Prepare your video:** Place an `.mp4` file in the project folder.
+2. **Convert:**
+   ```bash
+   python3 converter.py my_scene.mp4 frames/movie_sequence.txt
+   ```
+3. **Restart the Server:**
+   The server automatically detects `frames/movie_sequence.txt` and plays it at high speed.
+   ```bash
+   sudo systemctl restart matrix-telnet
+   ```
+
+## 🛠️ Project Structure
+
+- `server.py`: The heart of the TCP server and sequence controller.
+- `matrix_rain.py`: The engine for the digital rain effect.
+- `converter.py`: OpenCV script for video-to-ASCII conversion.
+- `frames/`:
+    - `story.txt`: Static scenes with `=====` delimiters.
+    - `movie_sequence.txt`: High-speed frames generated from video.
+- `setup_pi.sh`: Automation for systemd service creation.
+
+## 🧼 Terminal Cleanup
+
+If your terminal gets messy or the cursor disappears after a connection, simply run:
+```bash
+reset
+```
+
+---
+*Welcome to the desert of the real.*
