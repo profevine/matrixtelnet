@@ -17,29 +17,33 @@ WELCOME TO THE DESERT OF THE REAL.
 Connecting to the Matrix...
 {RESET}"""
 
-class MoviePlayer:
-    def __init__(self, folder_path):
-        self.sequences = {}
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        frames_dir = os.path.join(base_dir, "frames")
-        
-        if os.path.exists(frames_dir):
-            for filename in os.listdir(frames_dir):
-                if filename.endswith(".txt"):
-                    path = os.path.join(frames_dir, filename)
-                    with open(path, 'r') as f:
-                        content = f.read()
-                        frames = [fr.strip() for fr in content.split('=====') if fr.strip()]
-                        self.sequences[filename] = frames
+class FrameStreamer:
+    """Streams frames from a file without loading it entirely into memory."""
+    def __init__(self, file_path):
+        self.file_path = file_path
+        self.base_dir = os.path.dirname(os.path.abspath(__file__))
+        self.full_path = os.path.join(self.base_dir, file_path)
 
-    def get_sequence(self, name):
-        return self.sequences.get(name, [])
+    def frames(self):
+        if not os.path.exists(self.full_path):
+            return
+        
+        with open(self.full_path, 'r') as f:
+            current_frame = []
+            for line in f:
+                if line.startswith('====='):
+                    if current_frame:
+                        yield "".join(current_frame).strip()
+                        current_frame = []
+                else:
+                    current_frame.append(line)
+            if current_frame:
+                yield "".join(current_frame).strip()
 
 class MatrixTelnetServer:
     def __init__(self, host='0.0.0.0', port=2772):
         self.host = host
         self.port = port
-        self.movie = MoviePlayer('frames')
 
     async def handle_client(self, reader, writer):
         addr = writer.get_extra_info('peername')
@@ -53,15 +57,15 @@ class MatrixTelnetServer:
             await asyncio.sleep(3)
             
             # 1. Play "story.txt" (Classic Slow Scenes)
-            story = self.movie.get_sequence("story.txt")
-            for frame in story:
+            story_streamer = FrameStreamer("frames/story.txt")
+            for frame in story_streamer.frames():
                 writer.write((CLEAR + BRIGHT_GREEN + frame + RESET).encode())
                 await writer.drain()
                 await asyncio.sleep(3)
             
-            # 2. Play "movie_sequence.txt" (High FPS converted video)
-            video = self.movie.get_sequence("movie_sequence.txt")
-            for frame in video:
+            # 2. Play "movie_sequence.txt" (High FPS Streaming)
+            movie_streamer = FrameStreamer("frames/movie_sequence.txt")
+            for frame in movie_streamer.frames():
                 writer.write((CLEAR + BRIGHT_GREEN + frame + RESET).encode())
                 await writer.drain()
                 await asyncio.sleep(0.04) # ~24 FPS
