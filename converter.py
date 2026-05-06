@@ -26,7 +26,7 @@ def frame_to_ascii(frame, width=80):
     frame_ascii = "\n".join([ascii_str[i:(i + width)] for i in range(0, len(ascii_str), width)])
     return frame_ascii
 
-def convert_video(input_path, output_path, width=80, max_frames=1000):
+def convert_video(input_path, output_path, width=80, max_frames=None):
     cap = cv2.VideoCapture(input_path)
     if not cap.isOpened():
         print(f"Error: Could not open video {input_path}")
@@ -36,7 +36,7 @@ def convert_video(input_path, output_path, width=80, max_frames=1000):
     with open(output_path, 'w') as f:
         while True:
             ret, frame = cap.read()
-            if not ret or frames_count >= max_frames:
+            if not ret or (max_frames is not None and frames_count >= max_frames):
                 break
             
             ascii_frame = frame_to_ascii(frame, width)
