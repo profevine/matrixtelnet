@@ -6,7 +6,7 @@ import os
 from matrix_rain import MatrixRain, GREEN, BRIGHT_GREEN, RESET, CLEAR, HIDE_CURSOR, SHOW_CURSOR
 
 # Welcome message
-WELCOME = f"""{BRIGHT_GREEN}
+WELCOME = fr"""{BRIGHT_GREEN}
 WELCOME TO THE DESERT OF THE REAL.
 
   _   _             
