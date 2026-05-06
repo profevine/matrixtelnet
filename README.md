@@ -84,3 +84,14 @@ Control the Matrix using your keyboard in real-time:
 
 ---
 *Welcome to the desert of the real.*
+---
+
+### ⚖️ Disclaimer / Aviso Legal
+
+**Português:**
+Este projeto foi desenvolvido exclusivamente para fins de estudo e aprendizado. Não possui qualquer intuito comercial. "The Matrix" é uma marca registrada da Warner Bros. Entertainment Inc.
+
+**English:**
+This project was developed strictly for educational and learning purposes. It has no commercial intent. "The Matrix" is a registered trademark of Warner Bros. Entertainment Inc.
+
+---

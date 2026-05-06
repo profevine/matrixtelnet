@@ -1,3 +1,8 @@
+"""
+DISCLAIMER: This project is for educational purposes only and has no commercial intent.
+"The Matrix" is a registered trademark of Warner Bros. Entertainment Inc.
+"""
+
 import random
 import time
 import os
