@@ -3,9 +3,9 @@ import random
 import time
 import shutil
 import os
+import pickle
 from matrix_rain import MatrixRain, GREEN, BRIGHT_GREEN, RESET, CLEAR, HIDE_CURSOR, SHOW_CURSOR
 
-# ANSI for progress bar and controls
 YELLOW = "\033[93m"
 BLUE = "\033[94m"
 
@@ -23,37 +23,60 @@ Controls: [Space] Play/Pause | [L] +10s | [H] -10s | [J] +1m | [K] -1m
 {RESET}"""
 
 class IndexedFrameStreamer:
-    """Streams frames from a file with seeking support using a byte index."""
     def __init__(self, file_path):
         base_dir = os.path.dirname(os.path.abspath(__file__))
         self.full_path = os.path.join(base_dir, file_path)
+        self.index_path = self.full_path + ".idx"
         self.offsets = []
-        self._index_file()
+        self.is_ready = False
+        
+    async def ensure_indexed(self):
+        if os.path.exists(self.index_path):
+            try:
+                with open(self.index_path, 'rb') as f:
+                    self.offsets = pickle.load(f)
+                self.is_ready = True
+                print(f"Loaded {len(self.offsets)} offsets from cache.")
+                return
+            except:
+                print("Cache corrupt, re-indexing...")
+
+        # Run indexing in a thread to not block asyncio
+        loop = asyncio.get_running_loop()
+        await loop.run_in_executor(None, self._index_file)
+        self.is_ready = True
 
     def _index_file(self):
         if not os.path.exists(self.full_path):
             return
-        print(f"Indexing {self.full_path}...")
+        print(f"Indexing {self.full_path} (this may take a while)...")
+        offsets = []
         with open(self.full_path, 'rb') as f:
             offset = 0
-            for line in f:
+            while True:
+                line = f.readline()
+                if not line: break
                 if line.startswith(b'====='):
-                    self.offsets.append(offset)
+                    offsets.append(offset)
                 offset += len(line)
-        print(f"Indexed {len(self.offsets)} frames.")
+        
+        self.offsets = offsets
+        try:
+            with open(self.index_path, 'wb') as f:
+                pickle.dump(offsets, f)
+        except: pass
+        print(f"Indexing complete: {len(self.offsets)} frames.")
 
     def get_frame(self, index):
         if not self.offsets or index >= len(self.offsets):
             return None
-        
         index = max(0, min(index, len(self.offsets) - 1))
-        with open(self.full_path, 'r') as f:
+        with open(self.full_path, 'r', encoding='utf-8', errors='ignore') as f:
             f.seek(self.offsets[index])
-            f.readline() # Skip the ===== line
+            f.readline()
             current_frame = []
             for line in f:
-                if line.startswith('====='):
-                    break
+                if line.startswith('====='): break
                 current_frame.append(line)
             return "".join(current_frame).strip()
 
@@ -67,53 +90,43 @@ class MatrixTelnetServer:
         self.movie = IndexedFrameStreamer("frames/movie_sequence.txt")
 
     def get_progress_bar(self, current, total):
+        if total == 0: return "[INDEXING...]"
         width = 40
-        progress = int((current / total) * width) if total > 0 else 0
+        progress = int((current / total) * width)
         bar = "█" * progress + "-" * (width - progress)
-        percent = (current / total) * 100 if total > 0 else 0
-        
-        # Format time MM:SS
         cur_time = f"{int(current/24//60):02d}:{int(current/24%60):02d}"
         tot_time = f"{int(total/24//60):02d}:{int(total/24%60):02d}"
-        
-        return f"\r{tot_time} [{BLUE}{bar}{RESET}] {cur_time} ({percent:.1f}%)"
+        return f"\r{tot_time} [{BLUE}{bar}{RESET}] {cur_time} ({ (current/total)*100:.1f}%)"
 
     async def handle_client(self, reader, writer):
         addr = writer.get_extra_info('peername')
-        print(f"New connection from {addr}")
-        
         try:
             writer.write(HIDE_CURSOR.encode() + CLEAR.encode() + WELCOME.encode())
             await writer.drain()
-            await asyncio.sleep(3)
+            
+            # Wait for index to be ready if it's still building
+            while not self.movie.is_ready:
+                writer.write(b"\rBuilding Index... Please wait.\r")
+                await writer.drain()
+                await asyncio.sleep(2)
             
             frame_idx = 0
             playing = True
             total_frames = len(self.movie)
             
-            # Task to read input from client
             async def get_input():
                 nonlocal frame_idx, playing
                 while True:
-                    try:
-                        data = await reader.read(1)
-                        if not data: break
-                        key = data.decode().lower()
-                        
-                        if key == ' ': # Pause/Play
-                            playing = not playing
-                        elif key == 'l': # +10s (approx 240 frames)
-                            frame_idx = min(frame_idx + 240, total_frames - 1)
-                        elif key == 'h': # -10s
-                            frame_idx = max(frame_idx - 240, 0)
-                        elif key == 'j': # +1m (1440 frames)
-                            frame_idx = min(frame_idx + 1440, total_frames - 1)
-                        elif key == 'k': # -1m
-                            frame_idx = max(frame_idx - 1440, 0)
-                        elif key == 'q': # Quit
-                            break
-                    except: break
-
+                    data = await reader.read(1)
+                    if not data: break
+                    key = data.decode().lower()
+                    if key == ' ': playing = not playing
+                    elif key == 'l': frame_idx = min(frame_idx + 240, total_frames - 1)
+                    elif key == 'h': frame_idx = max(frame_idx - 240, 0)
+                    elif key == 'j': frame_idx = min(frame_idx + 1440, total_frames - 1)
+                    elif key == 'k': frame_idx = max(frame_idx - 1440, 0)
+                    elif key == 'q': break
+            
             input_task = asyncio.create_task(get_input())
             
             while frame_idx < total_frames:
@@ -121,21 +134,17 @@ class MatrixTelnetServer:
                     frame = self.movie.get_frame(frame_idx)
                     if frame:
                         progress = self.get_progress_bar(frame_idx, total_frames)
-                        # Clear screen, show frame, then progress bar at bottom
                         writer.write((CLEAR + frame + "\n\n" + progress).encode())
                         await writer.drain()
                         frame_idx += 1
-                    await asyncio.sleep(0.04) # 24 FPS
+                    await asyncio.sleep(0.04)
                 else:
-                    # Paused state: just update the progress bar to show PAUSED
                     progress = self.get_progress_bar(frame_idx, total_frames)
                     writer.write(f"\r{progress} [PAUSED]".encode())
                     await writer.drain()
                     await asyncio.sleep(0.5)
-
-            input_task.cancel()
             
-            # Infinite Matrix Rain after movie
+            input_task.cancel()
             rain = MatrixRain(80, 24)
             while True:
                 rain.update()
@@ -143,10 +152,7 @@ class MatrixTelnetServer:
                 await writer.drain()
                 await asyncio.sleep(0.05)
                 
-        except (ConnectionResetError, BrokenPipeError):
-            print(f"Connection closed by {addr}")
-        except Exception as e:
-            print(f"Error handling {addr}: {e}")
+        except: pass
         finally:
             try:
                 writer.write(RESET.encode() + SHOW_CURSOR.encode())
@@ -155,6 +161,8 @@ class MatrixTelnetServer:
             except: pass
 
     async def start(self):
+        # Start indexing in background
+        asyncio.create_task(self.movie.ensure_indexed())
         server = await asyncio.start_server(self.handle_client, self.host, self.port)
         print(f'Serving on port {self.port}')
         async with server:
