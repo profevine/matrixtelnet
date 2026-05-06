@@ -74,7 +74,7 @@ def run_locally():
             time.sleep(0.05)
     except KeyboardInterrupt:
         print(SHOW_CURSOR)
-        print("\nGoodbye, Neo.")
+        print(RESET + SHOW_CURSOR + "\nGoodbye, Neo.")
 
 if __name__ == "__main__":
     run_locally()
