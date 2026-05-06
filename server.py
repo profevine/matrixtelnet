@@ -6,6 +6,15 @@ import os
 import pickle
 from matrix_rain import MatrixRain, GREEN, BRIGHT_GREEN, RESET, CLEAR, HIDE_CURSOR, SHOW_CURSOR
 
+# Telnet Protocol Constants
+IAC  = b'\xff' # Interpret As Command
+WILL = b'\xfb'
+WONT = b'\xfc'
+DO   = b'\xfd'
+DONT = b'\xfe'
+ECHO = b'\x01'
+SGA  = b'\x03' # Suppress Go Ahead
+
 YELLOW = "\033[93m"
 BLUE = "\033[94m"
 
@@ -36,20 +45,15 @@ class IndexedFrameStreamer:
                 with open(self.index_path, 'rb') as f:
                     self.offsets = pickle.load(f)
                 self.is_ready = True
-                print(f"Loaded {len(self.offsets)} offsets from cache.")
                 return
-            except:
-                print("Cache corrupt, re-indexing...")
+            except: pass
 
-        # Run indexing in a thread to not block asyncio
         loop = asyncio.get_running_loop()
         await loop.run_in_executor(None, self._index_file)
         self.is_ready = True
 
     def _index_file(self):
-        if not os.path.exists(self.full_path):
-            return
-        print(f"Indexing {self.full_path} (this may take a while)...")
+        if not os.path.exists(self.full_path): return
         offsets = []
         with open(self.full_path, 'rb') as f:
             offset = 0
@@ -59,17 +63,14 @@ class IndexedFrameStreamer:
                 if line.startswith(b'====='):
                     offsets.append(offset)
                 offset += len(line)
-        
         self.offsets = offsets
         try:
             with open(self.index_path, 'wb') as f:
                 pickle.dump(offsets, f)
         except: pass
-        print(f"Indexing complete: {len(self.offsets)} frames.")
 
     def get_frame(self, index):
-        if not self.offsets or index >= len(self.offsets):
-            return None
+        if not self.offsets or index >= len(self.offsets): return None
         index = max(0, min(index, len(self.offsets) - 1))
         with open(self.full_path, 'r', encoding='utf-8', errors='ignore') as f:
             f.seek(self.offsets[index])
@@ -101,10 +102,16 @@ class MatrixTelnetServer:
     async def handle_client(self, reader, writer):
         addr = writer.get_extra_info('peername')
         try:
+            # TELNET NEGOTIATION: Request Character Mode
+            # We tell the client: "I will echo, I will suppress go-ahead, you should suppress go-ahead"
+            writer.write(IAC + WILL + ECHO)
+            writer.write(IAC + WILL + SGA)
+            writer.write(IAC + DO + SGA)
+            await writer.drain()
+
             writer.write(HIDE_CURSOR.encode() + CLEAR.encode() + WELCOME.encode())
             await writer.drain()
             
-            # Wait for index to be ready if it's still building
             while not self.movie.is_ready:
                 writer.write(b"\rBuilding Index... Please wait.\r")
                 await writer.drain()
@@ -119,6 +126,12 @@ class MatrixTelnetServer:
                 while True:
                     data = await reader.read(1)
                     if not data: break
+                    # Ignore telnet commands (starting with \xff)
+                    if data[0] == 255:
+                        # Skip next 2 bytes of telnet command
+                        await reader.read(2)
+                        continue
+                        
                     key = data.decode().lower()
                     if key == ' ': playing = not playing
                     elif key == 'l': frame_idx = min(frame_idx + 240, total_frames - 1)
@@ -161,7 +174,6 @@ class MatrixTelnetServer:
             except: pass
 
     async def start(self):
-        # Start indexing in background
         asyncio.create_task(self.movie.ensure_indexed())
         server = await asyncio.start_server(self.handle_client, self.host, self.port)
         print(f'Serving on port {self.port}')
