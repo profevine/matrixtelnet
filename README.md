@@ -6,7 +6,7 @@
 
 ## Português
 
-Inspirado no famoso `towel.blinkenlights.nl`, este projeto traz a experiência de "The Matrix" para o seu terminal. Transmitimos o filme em alta velocidade (24 FPS) com cores reais (TrueColor) e o icônico efeito de "Chuva Digital" — tudo através de uma conexão Telnet.
+Inspirado no famoso `towel.blinkenlights.nl`, este projeto traz a experiência de "The Matrix" para o seu terminal. Transmissão do filme em alta velocidade (24 FPS) com cores reais (TrueColor) e o icônico efeito de "Chuva Digital" — tudo através de uma conexão Telnet e todos os os mais de 190k frames do filme em código ascii.
 
 ### 📺 Como Assistir
 
