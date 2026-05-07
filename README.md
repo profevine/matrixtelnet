@@ -10,13 +10,7 @@ Inspirado no famoso `towel.blinkenlights.nl`, este projeto traz a experiência d
 
 ### 📺 Como Assistir
 
-#### 1. Pelo Navegador (Sem instalar nada)
-Você pode assistir diretamente do seu navegador usando um cliente Telnet online:
-1. Acesse [Telehack.com](https://telehack.com).
-2. No prompt, digite: `tnet matrix.profevine.com.br 2772`
-3. Aperte Enter e aproveite!
-
-#### 2. No Windows (PowerShell ou CMD)
+#### 1. No Windows (PowerShell ou CMD)
 O Windows não vem com o cliente Telnet ativo por padrão. Para ativar e assistir:
 1. Abra o **PowerShell como Administrador** e rode: 
    `Enable-WindowsOptionalFeature -Online -FeatureName TelnetClient`
@@ -25,7 +19,7 @@ O Windows não vem com o cliente Telnet ativo por padrão. Para ativar e assisti
    telnet matrix.profevine.com.br 2772
    ```
 
-#### 3. No Linux / macOS
+#### 2. No Linux / macOS
 1. Abra o seu terminal favorito.
 2. Certifique-se de que o `telnet` está instalado (`sudo apt install telnet` no Ubuntu).
 3. Conecte-se:
@@ -50,13 +44,7 @@ Inspired by `towel.blinkenlights.nl`, this project streams "The Matrix" experien
 
 ### 📺 How to Watch
 
-#### 1. Via Browser (Zero installation)
-You can watch directly from your web browser using an online Telnet client:
-1. Go to [Telehack.com](https://telehack.com).
-2. At the prompt, type: `tnet matrix.profevine.com.br 2772`
-3. Press Enter and enjoy!
-
-#### 2. On Windows (PowerShell or CMD)
+#### 1. On Windows (PowerShell or CMD)
 The Telnet client is disabled by default. To enable and watch:
 1. Open **PowerShell as Administrator** and run:
    `Enable-WindowsOptionalFeature -Online -FeatureName TelnetClient`
@@ -65,7 +53,7 @@ The Telnet client is disabled by default. To enable and watch:
    telnet matrix.profevine.com.br 2772
    ```
 
-#### 3. On Linux / macOS
+#### 2. On Linux / macOS
 1. Open your favorite terminal.
 2. Ensure `telnet` is installed (`sudo apt install telnet` on Debian/Ubuntu).
 3. Connect:
